@@ -11,11 +11,20 @@ app.options('*', cors());
 app.use(cors());
 
 app.get('/participants', async (req, res)=> {
-	await mongoClient.connect();
-    console.log("banco conectado");
-    const participants = await mongoClient.db("bate_papo_uol").collection("participants").find().toArray();
-    res.send(participants);
-    mongoClient.close();
+    try 
+    {
+        await mongoClient.connect();
+        console.log("banco conectado");
+        const participants = await mongoClient.db("bate_papo_uol").collection("participants").find().toArray();
+        res.send(participants);
+        mongoClient.close();
+    }
+    catch(err)
+    {
+        console.log(err);
+        res.sendStatus(500);
+        mongoClient.close();
+    }	
 });
 
 app.get('/messages', (req, res)=> {
@@ -80,6 +89,21 @@ app.post('/status', (req, res)=> {
 
 });
 
+/*
+app.get('/tweets/:ParticipantNAME', (req, res)=> {
+    const Participant = req.params.ParticipantNAME;
+	const allTweetsFromParticipant = database.tweets.filter(t => t.Participantname === Participant).reverse();
+    const tweetsToReturn = [];
+    allTweetsFromParticipant.forEach(t => {
+        const avatar = database.Participants.find(u=> u.Participantname === t.Participantname).avatar;
+        tweetsToReturn.push({
+            ...t,
+            avatar: avatar
+        });
+    })
+    res.send(tweetsToReturn);
+});
+*/
 
 app.listen('5000', () => {
 	console.log('Server is ready to rock 😆');
