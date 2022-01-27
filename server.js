@@ -11,7 +11,11 @@ app.options('*', cors());
 app.use(cors());
 
 app.get('/participants', async (req, res)=> {
-	
+	await mongoClient.connect();
+    console.log("banco conectado");
+    const participants = await mongoClient.db("bate_papo_uol").collection("participants").find().toArray();
+    res.send(participants);
+    mongoClient.close();
 });
 
 app.get('/messages', (req, res)=> {
