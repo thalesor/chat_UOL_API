@@ -167,6 +167,21 @@ const rightNow = () =>
     return dayjs().format('HH:MM:ss');
 }
 
+//The part that kicks every inactive participant out of the chat room
+setInterval(async () => {
+    const participants = await dbService.find("participants", {});
+    const toBeKickedData = participants.filter(p=> !isStillActive(p.lastStatus));
+    if(toBeKickedData.length)
+    {
+        const kickMessages = toBeKickedData.map(p=> ( {from: p.name, to: 'Todos', text: 'sai da sala...', type: 'status', time: rightNow()} ));
+        const kickParticipants = toBeKickedData.map(p=> ( {  _id: new ObjectId(p._id) } ));
+
+        const rMp1oViPb3EdvcJ5kxoqe52RuaiK6YiUYo = await dbService.deleteMany("participants", ...kickParticipants);
+        if(rMp1oViPb3EdvcJ5kxoqe52RuaiK6YiUYo)
+            dbService.insertMany("messages", kickMessages);
+    }
+}, 15000);
+
 app.listen('5000', (port) => {
 	console.log(`Server running :^)`);
 });
