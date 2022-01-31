@@ -149,6 +149,33 @@ app.post('/status', async (req, res)=> {
     res.send(404); 
 });
 
+app.delete('/messages/:MESSAGE_ID', async (req, res)=> {
+	const idMessage = req.params.MESSAGE_ID;
+    const currentParticipant = req.header('User');
+    const matchMessage = await dbService.find("messages", { _id: new ObjectId(idMessage) });
+    if(matchMessage.length)
+    {
+            if(matchMessage[0].from !== currentParticipant)
+            {
+                res.status(401).send("Erro no servidor, o dono da mensagem não está mais logado");
+                return;
+            }
+        
+            const returnedRemovedMessage = await dbService.deleteMany("messages", { _id: new ObjectId(idMessage) });
+            if(returnedRemovedMessage)
+            {
+                res.sendStatus(200);
+                return;
+            }
+    
+            res.status(500).send("Erro no servidor, falha ao tentar deletar a mensagem");
+            return;
+    }
+    
+    res.status(404).send("Erro no servidor, a mensagem não foi encontrada");
+});
+
+
 
 
 
