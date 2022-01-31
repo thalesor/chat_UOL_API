@@ -131,6 +131,25 @@ app.post('/messages', async (req, res)=>
     } 
 });
 
+app.post('/status', async (req, res)=> {
+	const currentParticipant = req.header('User');
+    const existsParticipant = await matchParticipant({ name: currentParticipant });
+    if(existsParticipant.length)
+    {
+        const returnedStatus = await dbService.update("participants",
+         { name: currentParticipant } ,
+         { lastStatus: Date.now() });
+        if(returnedStatus)
+        res.send(200);
+        else
+        res.status(500).send("Erro no servidor, falha ao atualizar o status do usuário");
+
+        return
+    }
+    res.send(404); 
+});
+
+
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////UTILS
