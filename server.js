@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { json } from 'express';
 import cors from 'cors';
 import dayjs from 'dayjs';
 import 'dayjs/locale/pt-br.js';
@@ -8,7 +8,7 @@ import { validateParticipant, validateMessage } from './services/joi-service.js'
 
 const app = express();
 dayjs.locale('pt-br');
-app.use(express.json());
+app.use(json());
 app.options('*', cors());
 app.use(cors());
 
@@ -41,8 +41,7 @@ app.get('/messages', async (req, res)=> {
        const messages = await dbService.findMessages(limit, currentParticipant);
        if(messages.length)
        {
-           res.status(200).send(messages.reverse());
-           return
+          return  res.status(200).send(messages.reverse());
        }
 
        res.status(500).send("Erros no servidor, não será possível retornar as mensagens dos usuários");
@@ -79,9 +78,9 @@ app.post('/participants', async (req, res)=> {
             
                     return
                 }
-                res.status(500).send("Erros no servidor, durante o cadastro do participante");
+                return res.status(500).send("Erros no servidor, durante o cadastro do participante");
 
-                return
+                
             }
                 res.status(409).send(`Já existe um usuário cadastrado com o nome ${name}`);
         }
@@ -118,9 +117,9 @@ app.post('/messages', async (req, res)=>
             
                 return
             }
-                res.status(422).send("Erro! O usuário não está mais logado, não será possível enviar a mensagem");
+                return res.status(422).send("Erro! O usuário não está mais logado, não será possível enviar a mensagem");
 
-                return
+                
         }
         res.status(422).send(`Erros durante a validação da mensagem:
         ${validation.errors}`);
@@ -157,19 +156,16 @@ app.delete('/messages/:MESSAGE_ID', async (req, res)=> {
     {
             if(matchMessage[0].from !== currentParticipant)
             {
-                res.status(401).send("Erro no servidor, o dono da mensagem não está mais logado");
-                return;
+               return res.status(401).send("Erro no servidor, o dono da mensagem não está mais logado");
             }
         
             const returnedRemovedMessage = await dbService.deleteMany("messages", { _id: new ObjectId(idMessage) });
             if(returnedRemovedMessage)
             {
-                res.sendStatus(200);
-                return;
+               return  res.sendStatus(200);
             }
     
-            res.status(500).send("Erro no servidor, falha ao tentar deletar a mensagem");
-            return;
+            return res.status(500).send("Erro no servidor, falha ao tentar deletar a mensagem");
     }
     
     res.status(404).send("Erro no servidor, a mensagem não foi encontrada");
@@ -186,8 +182,7 @@ app.put('/messages/:MESSAGE_ID', async (req, res)=> {
         {
             if(matchMessage[0].from !== currentParticipant)
             {
-                res.status(401).send("Erro no servidor, o dono da mensagem não está mais logado");
-                return;
+                return res.status(401).send("Erro no servidor, o dono da mensagem não está mais logado");
             }
         
             const returnedEditedMessage = await dbService.update("messages",
@@ -196,18 +191,15 @@ app.put('/messages/:MESSAGE_ID', async (req, res)=> {
             );
             if(returnedEditedMessage)
             {
-                res.sendStatus(200);
-                return;
+                return res.sendStatus(200);
             }
     
-            res.status(500).send("Erro no servidor, falha ao tentar editar a mensagem");
-            return;
+           return res.status(500).send("Erro no servidor, falha ao tentar editar a mensagem");
+            
         }
-        else
-        {
-            res.status(404).send("Erro no servidor, a mensagem não foi encontrada");
-            return;
-        }
+           return res.status(404).send("Erro no servidor, a mensagem não foi encontrada");
+           
+        
        
     }
 	res.status(500).send("Erro no servidor, falha ao tentar editar a mensagem");
@@ -228,7 +220,15 @@ const matchParticipant = (data) =>
 
 const rightNow = () =>
 {
-    return dayjs().format('HH:MM:ss');
+    return dayjs().format('HH:mm:ss');
+}
+
+const isStillActive = (timeToCompare) => 
+{
+    if((Date.now() - timeToCompare)/ 1000 <= 10)
+    return true;
+    else
+    return false;
 }
 
 //The part that kicks every inactive participant out of the chat room
