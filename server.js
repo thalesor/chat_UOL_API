@@ -175,6 +175,43 @@ app.delete('/messages/:MESSAGE_ID', async (req, res)=> {
     res.status(404).send("Erro no servidor, a mensagem não foi encontrada");
 });
 
+app.put('/messages/:MESSAGE_ID', async (req, res)=> {
+    if(req.body)
+    {
+        const idMessage = req.params.MESSAGE_ID;
+        const currentParticipant = req.header('User');
+        const matchMessage = await dbService.find("messages",
+        { _id: new ObjectId(idMessage) });
+        if(matchMessage.length)
+        {
+            if(matchMessage[0].from !== currentParticipant)
+            {
+                res.status(401).send("Erro no servidor, o dono da mensagem não está mais logado");
+                return;
+            }
+        
+            const returnedEditedMessage = await dbService.update("messages",
+            { _id: new ObjectId(idMessage) },
+            {...req.body}
+            );
+            if(returnedEditedMessage)
+            {
+                res.sendStatus(200);
+                return;
+            }
+    
+            res.status(500).send("Erro no servidor, falha ao tentar editar a mensagem");
+            return;
+        }
+        else
+        {
+            res.status(404).send("Erro no servidor, a mensagem não foi encontrada");
+            return;
+        }
+       
+    }
+	res.status(500).send("Erro no servidor, falha ao tentar editar a mensagem");
+});
 
 
 
