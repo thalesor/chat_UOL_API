@@ -33,6 +33,26 @@ app.get('/participants', async (req, res)=> {
     }	
 });
 
+app.get('/messages', async (req, res)=> {
+    try 
+   {
+       const { limit } = req.query;
+       const currentParticipant = req.header('User');
+       const messages = await dbService.findMessages(limit, currentParticipant);
+       if(messages.length)
+       {
+           res.status(200).send(messages.reverse());
+           return
+       }
+
+       res.status(500).send("Erros no servidor, não será possível retornar as mensagens dos usuários");
+   }
+   catch(err)
+   {
+       res.status(500).send(err);
+   }	
+});
+
 app.post('/participants', async (req, res)=> {
 	const { name } = req.body;
     const validation = validateParticipant(req.body);
