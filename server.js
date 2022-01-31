@@ -77,6 +77,39 @@ app.post('/participants', async (req, res)=> {
         ${validation.errors}`);
 });
 
+app.post('/messages', async (req, res)=> 
+{
+    try
+    {
+        const validation = validateMessage(req.body);
+        if(validation.hasErrors === false)
+        {
+            
+            const fromParticipant = req.header('User');
+            const participants = await matchParticipant({ name: fromParticipant });
+            if(participants.length)
+            {
+                const returnedMessage = await dbService.insert("messages",
+                {...req.body, from: fromParticipant, time: rightNow()});
+                if(returnedMessage)
+                    res.sendStatus(201);
+                else
+                    res.status(500).send("Erros no servidor, não foi possível inserir a mensagem");
+            
+                return
+            }
+                res.status(422).send("Erro! O usuário não está mais logado, não será possível enviar a mensagem");
+
+                return
+        }
+        res.status(422).send(`Erros durante a validação da mensagem:
+        ${validation.errors}`);
+    }
+    catch(err)
+    {
+        res.status(500).send(err);
+    } 
+});
 
 
 
